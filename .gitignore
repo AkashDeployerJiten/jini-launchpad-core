@@ -1,0 +1,19 @@
+# Python virtual environments (Strictly block venv)
+venv/
+.venv/
+env/
+ENV/
+
+# Secrets & Environment Variables (Asli tokens leak na hon)
+.env
+*.env
+secrets.json
+
+# Local system caches and logs
+__pycache__/
+*.pyc
+*.log
+.pytest_cache/
+
+# Jini Factory local temporary compilations
+builds/

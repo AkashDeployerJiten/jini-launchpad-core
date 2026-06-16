@@ -1,0 +1,58 @@
+name: Jini Empire - Automated Factory Engine
+
+on:
+  schedule:
+    # Har 5 minute me continuous pool automatic chalega database sync ke liye
+    - cron: '*/5 * * * *'
+  # GitHub UI se manually run karne ka gate
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  run-factory:
+    runs-on: ubuntu-latest
+    
+    # =====================================================================
+    # 👑 HARDENED REGISTRY WRITE PERMISSIONS (Solves Docker Push 403 Forbidden)
+    # =====================================================================
+    permissions:
+      contents: read
+      packages: write  # This grants explicit write/push authorization to GHCR Matrix
+    
+    steps:
+    - name: Checkout Control Plane Code
+      uses: actions/checkout@v4
+
+    - name: Setup Python Environment
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+
+    - name: Install Dependencies from Requirements File
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    # =====================================================================
+    # 🔑 GHCR AUTOMATED INTER-REGISTRY SECURITY HANDSHAKE
+    # =====================================================================
+    - name: Log in to GitHub Container Registry (GHCR)
+      run: |
+        echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+    # =====================================================================
+    # 🔒 SECURE SECRETS INJECTION & ENGINE RUN
+    # =====================================================================
+    - name: Run Factory Compiler Engine Layer
+      env:
+        # GitHub Secrets vault se runtime par values direct process memory me load hongi
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        # FORCE LOWERCASE URL: Prevents Registry Bad Name Errors caused by uppercase letters
+        REGISTRY_URL: ghcr.io/akashdeployerjiten
+      run: |
+        # --single-run flag ensure karega ki script execute hokar safely close ho jaye
+        python factory.py --single-run
