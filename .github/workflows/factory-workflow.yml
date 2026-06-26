@@ -3,7 +3,7 @@ name: Jini Empire - Automated Factory Engine
 on:
   schedule:
     # Har 5 minute me continuous pool automatic chalega database sync ke liye
-    #- cron: '*/5 * * * *'
+    # - cron: '*/5 * * * *'
   # GitHub UI se manually run karne ka gate
   workflow_dispatch:
 
